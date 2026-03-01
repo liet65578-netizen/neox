@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>White Loss - Mini App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <style>
+        /* ТВОИ СТИЛИ ПОЛНОСТЬЮ СОХРАНЕНЫ */
+        :root { --bg-color: #0b0b0f; --glass-bg: rgba(255, 255, 255, 0.05); --glass-border: rgba(255, 255, 255, 0.1); --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); --text-main: #ffffff; --text-muted: #a0a0b0; --accent-color: #8a2be2; --accent-glow: rgba(138, 43, 226, 0.5); --danger: #ff4757; --success: #2ed573; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-color); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; justify-content: center; background-image: radial-gradient(circle at 15% 50%, rgba(138, 43, 226, 0.15), transparent 25%), radial-gradient(circle at 85% 30%, rgba(0, 212, 255, 0.1), transparent 25%); }
+        .app-container { width: 100%; max-width: 480px; height: 100%; position: relative; display: flex; flex-direction: column; }
+        .glass-panel { background: var(--glass-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--glass-border); border-radius: 20px; padding: 16px; box-shadow: var(--glass-shadow); margin-bottom: 16px; transition: transform 0.2s ease; }
+        .glass-button { background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-main); padding: 14px; border-radius: 14px; width: 100%; font-size: 16px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s ease; margin-bottom: 12px; }
+        .glass-button:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.1); }
+        .glass-button.primary { background: linear-gradient(135deg, rgba(138, 43, 226, 0.8), rgba(106, 13, 173, 0.8)); border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 4px 15px var(--accent-glow); }
+        .header { text-align: center; padding: 20px 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .logo-icon { font-size: 32px; color: #fff; text-shadow: 0 0 15px var(--text-main); animation: pulse 2s infinite alternate; }
+        @keyframes pulse { from { transform: scale(1); filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); } to { transform: scale(1.1); filter: drop-shadow(0 0 15px rgba(255,255,255,0.8)); } }
+        .view { display: none; flex: 1; overflow-y: auto; padding: 0 16px 100px 16px; animation: fadeIn 0.3s ease; }
+        .view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .profile-info { display: flex; align-items: center; gap: 15px; }
+        .avatar { width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; color: #333; }
+        .user-details h3 { font-size: 16px; margin-bottom: 4px; } .user-details p { font-size: 13px; color: var(--text-muted); }
+        .copy-btn { margin-left: auto; background: none; border: none; color: var(--text-muted); font-size: 18px; cursor: pointer; padding: 8px; }
+        .status-indicator { display: flex; align-items: center; gap: 10px; font-weight: 500; color: var(--text-muted); }
+        .dot { width: 10px; height: 10px; border-radius: 50%; background-color: var(--danger); box-shadow: 0 0 8px var(--danger); transition: 0.3s; }
+        .dot.connected { background-color: var(--success); box-shadow: 0 0 8px var(--success); }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+        .stat-box { background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 15px; text-align: center; }
+        .stat-box h2 { font-size: 24px; color: var(--accent-color); margin-bottom: 5px; text-shadow: 0 0 10px var(--accent-glow); }
+        .stat-box p { font-size: 12px; color: var(--text-muted); }
+        .price-banner { text-align: center; padding: 30px 10px; } .price-banner h1 { font-size: 42px; display: flex; justify-content: center; align-items: center; gap: 10px; } .price-banner span { font-size: 16px; color: var(--text-muted); font-weight: normal; }
+        .disclaimer { text-align: center; font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-top: 20px; padding: 0 10px; }
+        .bottom-nav { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 32px); background: rgba(20, 20, 25, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 24px; display: flex; justify-content: space-around; padding: 12px 5px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .nav-item { background: none; border: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; cursor: pointer; transition: color 0.3s ease; width: 33%; }
+        .nav-item i { font-size: 20px; transition: transform 0.3s ease; } .nav-item.active { color: var(--text-main); } .nav-item.active i { transform: translateY(-3px); color: var(--accent-color); text-shadow: 0 0 10px var(--accent-glow); }
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: var(--glass-bg); backdrop-filter: blur(15px); border: 1px solid var(--glass-border); padding: 12px 24px; border-radius: 30px; color: #fff; transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); z-index: 1000; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .chat-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .chat-item:last-child { border-bottom: none; }
+        .chat-icon { width: 40px; height: 40px; border-radius: 50%; background: rgba(138, 43, 226, 0.3); display: flex; align-items: center; justify-content: center; margin-right: 15px; }
+        .chat-details { flex: 1; } .chat-name { font-size: 15px; font-weight: 500; } .chat-msgs { font-size: 12px; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+<div class="toast" id="toast">Скопировано!</div>
+
+<div class="app-container">
+    <div id="view-settings" class="view active">
+        <div class="header">
+            <i class="fa-solid fa-sparkles logo-icon"></i>
+            <h2>White Loss</h2>
+        </div>
+
+        <div class="glass-panel profile-info">
+            <div class="avatar" id="userAvatar">U</div>
+            <div class="user-details">
+                <h3 id="userName">Пользователь</h3>
+                <p id="userId">ID: Загрузка...</p>
+            </div>
+            <button class="copy-btn" onclick="copyId()"><i class="fa-regular fa-copy"></i></button>
+        </div>
+
+        <div class="glass-panel">
+            <div class="status-indicator">
+                <div class="dot" id="statusDot"></div>
+                <span id="statusText">Подключение...</span>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="glass-button" onclick="showAlert('Открываю инструкцию...')"><i class="fa-solid fa-book" style="color: #4facfe;"></i> Инструкция по подключению</button>
+            <button class="glass-button" onclick="showAlert('Открываю возможности...')"><i class="fa-solid fa-bolt" style="color: #f6d365;"></i> Возможности</button>
+            <button class="glass-button" onclick="showAlert('Связь с поддержкой...')"><i class="fa-solid fa-wrench" style="color: #a18cd1;"></i> Тех.поддержка</button>
+        </div>
+
+        <div class="glass-panel" style="margin-top: 16px;">
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #a18cd1;">Ваша статистика</h3>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <h2 id="statIntercepted">0</h2>
+                    <p>Перехвачено</p>
+                </div>
+                <div class="stat-box">
+                    <h2 id="statRecovered">0</h2>
+                    <p>Восстановлено</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-chats" class="view">
+        <div class="header">
+            <i class="fa-solid fa-comments logo-icon"></i>
+            <h2>Мои чаты</h2>
+        </div>
+        <div class="glass-panel" id="chatsListContainer">
+            <div style="text-align: center; padding: 40px 20px;" id="emptyChats">
+                <i class="fa-solid fa-ghost" style="font-size: 40px; color: var(--text-muted); margin-bottom: 15px;"></i>
+                <p style="color: var(--text-muted);">Загрузка чатов...</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-plus" class="view">
+        <div class="header">
+            <i class="fa-solid fa-star logo-icon" style="color: #f6d365;"></i>
+            <h2>White Loss <span style="color: #a18cd1;">Plus</span></h2>
+        </div>
+        <div class="glass-panel price-banner">
+            <h1><i class="fa-solid fa-star" style="color: #f6d365; font-size: 30px;"></i> 50 <span>/месяц</span></h1>
+        </div>
+        <button class="glass-button primary" onclick="tg.openInvoice('ЗДЕСЬ_ССЫЛКА_НА_ОПЛАТУ_STARS')">Подключить подписку за ★</button>
+        <button class="glass-button" onclick="showAlert('Переход к оплате в крипте/фиате...')">Подключить за Рубли/USDT</button>
+        <p class="disclaimer">Оплата автоматически доступна за Telegram Звезды (Stars). <br><br> Если вы хотите совершить платеж в другой валюте, пожалуйста, обратитесь к модератору.</p>
+    </div>
+
+    <nav class="bottom-nav">
+        <button class="nav-item active" data-target="view-settings"><i class="fa-solid fa-gear"></i><span>Настройки</span></button>
+        <button class="nav-item" data-target="view-chats"><i class="fa-solid fa-comment-dots"></i><span>Чаты</span></button>
+        <button class="nav-item" data-target="view-plus"><i class="fa-solid fa-star"></i><span>Plus</span></button>
+    </nav>
+</div>
+
+<script>
+    // ВАЖНО: Замени на адрес своего сервера, где крутится admin.py
+    const API_BASE_URL = "http://127.0.0.1:5000/"; 
+
+    const tg = window.Telegram.WebApp;
+    tg.expand(); 
+    tg.ready();
+
+    let currentUserId = null;
+
+    // Инициализация UI пользователя
+    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        const user = tg.initDataUnsafe.user;
+        currentUserId = user.id;
+        document.getElementById('userName').innerText = user.first_name || user.username;
+        document.getElementById('userId').innerText = `ID: ${user.id}`;
+        document.getElementById('userAvatar').innerText = (user.first_name || user.username).charAt(0).toUpperCase();
+        
+        // Загружаем данные с бэкенда
+        fetchUserData(user.id);
+    } else {
+        document.getElementById('userId').innerText = "Запустите из Telegram";
+    }
+
+    // Запрос к API admin.py
+    async function fetchUserData(userId) {
+        try {
+            // Запрос статистики
+            const statsRes = await fetch(`${API_BASE_URL}/api/webapp/stats?user_id=${userId}`);
+            const stats = await statsRes.json();
+            
+            document.getElementById('statIntercepted').innerText = stats.total || 0;
+            document.getElementById('statRecovered').innerText = stats.recovered || 0;
+
+            // Обновляем статус подключения
+            const dot = document.getElementById('statusDot');
+            const statusTxt = document.getElementById('statusText');
+            if (stats.connected) {
+                dot.classList.add('connected');
+                statusTxt.innerText = "Подключен (Business)";
+                statusTxt.style.color = "var(--success)";
+            } else {
+                statusTxt.innerText = "Не подключен";
+            }
+
+            // Запрос списка чатов
+            const chatsRes = await fetch(`${API_BASE_URL}/api/webapp/chats?user_id=${userId}`);
+            const chatsData = await chatsRes.json();
+            renderChats(chatsData.chats);
+
+        } catch (error) {
+            console.error("Ошибка загрузки данных:", error);
+            showToast("Ошибка связи с сервером");
+        }
+    }
+
+    function renderChats(chats) {
+        const container = document.getElementById('chatsListContainer');
+        if (!chats || chats.length === 0) {
+            container.innerHTML = `<div style="text-align: center; padding: 40px 20px;"><i class="fa-solid fa-ghost" style="font-size: 40px; color: var(--text-muted); margin-bottom: 15px;"></i><p style="color: var(--text-muted);">Вы еще не подключили бота ни к одному чату.</p></div>`;
+            return;
+        }
+
+        let html = '';
+        chats.forEach(chat => {
+            html += `
+                <div class="chat-item">
+                    <div class="chat-icon"><i class="fa-solid fa-user-group"></i></div>
+                    <div class="chat-details">
+                        <div class="chat-name">${chat.name}</div>
+                        <div class="chat-msgs">Сообщений: ${chat.msg_count}</div>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    // Навигация
+    const navItems = document.querySelectorAll('.nav-item');
+    const views = document.querySelectorAll('.view');
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            navItems.forEach(nav => nav.classList.remove('active'));
+            item.classList.add('active');
+            views.forEach(view => view.classList.remove('active'));
+            document.getElementById(item.getAttribute('data-target')).classList.add('active');
+        });
+    });
+
+    function showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.innerText = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    function showAlert(msg) { tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.showAlert(msg) : showToast(msg); }
+    function copyId() {
+        const idText = document.getElementById('userId').innerText.replace('ID: ', '');
+        navigator.clipboard.writeText(idText).then(() => showToast('ID скопирован!')).catch(e => console.error(e));
+    }
+</script>
+</body>
+</html>
