@@ -1,235 +1,408 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>White Loss - Mini App</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Quasar App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* ТВОИ СТИЛИ ПОЛНОСТЬЮ СОХРАНЕНЫ */
-        :root { --bg-color: #0b0b0f; --glass-bg: rgba(255, 255, 255, 0.05); --glass-border: rgba(255, 255, 255, 0.1); --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); --text-main: #ffffff; --text-muted: #a0a0b0; --accent-color: #8a2be2; --accent-glow: rgba(138, 43, 226, 0.5); --danger: #ff4757; --success: #2ed573; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg-color); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; justify-content: center; background-image: radial-gradient(circle at 15% 50%, rgba(138, 43, 226, 0.15), transparent 25%), radial-gradient(circle at 85% 30%, rgba(0, 212, 255, 0.1), transparent 25%); }
-        .app-container { width: 100%; max-width: 480px; height: 100%; position: relative; display: flex; flex-direction: column; }
-        .glass-panel { background: var(--glass-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--glass-border); border-radius: 20px; padding: 16px; box-shadow: var(--glass-shadow); margin-bottom: 16px; transition: transform 0.2s ease; }
-        .glass-button { background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-main); padding: 14px; border-radius: 14px; width: 100%; font-size: 16px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s ease; margin-bottom: 12px; }
-        .glass-button:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.1); }
-        .glass-button.primary { background: linear-gradient(135deg, rgba(138, 43, 226, 0.8), rgba(106, 13, 173, 0.8)); border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 4px 15px var(--accent-glow); }
-        .header { text-align: center; padding: 20px 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-        .logo-icon { font-size: 32px; color: #fff; text-shadow: 0 0 15px var(--text-main); animation: pulse 2s infinite alternate; }
-        @keyframes pulse { from { transform: scale(1); filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); } to { transform: scale(1.1); filter: drop-shadow(0 0 15px rgba(255,255,255,0.8)); } }
-        .view { display: none; flex: 1; overflow-y: auto; padding: 0 16px 100px 16px; animation: fadeIn 0.3s ease; }
-        .view.active { display: block; }
+        @keyframes oilSpill { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        :root { --glass-bg: rgba(25, 25, 30, 0.6); --glass-border: rgba(255, 255, 255, 0.08); --accent: #5e5ce6; --text-main: #f4f4f5; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: linear-gradient(-45deg, #11091e, #0a101f, #111a2f, #1b0d23); background-size: 400% 400%; animation: oilSpill 20s ease infinite; color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        
+        .icon { display: inline-block; width: 24px; height: 24px; }
+        
+        /* Onboarding: Language Search */
+        #onboarding { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; background: rgba(10,10,15,0.95); backdrop-filter: blur(20px); display: flex; flex-direction: column; padding: 40px 20px; transition: 0.3s; }
+        .search-lang { width: 100%; padding: 16px; background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); border-radius: 16px; color: white; font-size: 1.1rem; margin-bottom: 20px; outline: none; transition: 0.3s;}
+        .search-lang:focus { border-color: var(--accent); background: rgba(255,255,255,0.15); }
+        .lang-list { flex: 1; overflow-y: auto; list-style: none; }
+        .lang-item { padding: 18px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 1.1rem; cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; align-items: center;}
+        .lang-item:hover { background: rgba(255,255,255,0.05); }
+        .lang-name-en { color: #888; font-size: 0.9rem; }
+
+        .content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease; }
+        .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .profile-info { display: flex; align-items: center; gap: 15px; }
-        .avatar { width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; color: #333; }
-        .user-details h3 { font-size: 16px; margin-bottom: 4px; } .user-details p { font-size: 13px; color: var(--text-muted); }
-        .copy-btn { margin-left: auto; background: none; border: none; color: var(--text-muted); font-size: 18px; cursor: pointer; padding: 8px; }
-        .status-indicator { display: flex; align-items: center; gap: 10px; font-weight: 500; color: var(--text-muted); }
-        .dot { width: 10px; height: 10px; border-radius: 50%; background-color: var(--danger); box-shadow: 0 0 8px var(--danger); transition: 0.3s; }
-        .dot.connected { background-color: var(--success); box-shadow: 0 0 8px var(--success); }
+
+        /* Liquid Glass Bottom Nav */
+        .bottom-nav { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 400px; height: 70px; background: rgba(20, 20, 25, 0.7); backdrop-filter: blur(40px) saturate(150%); border: 1px solid var(--glass-border); border-radius: 35px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 10px 40px rgba(0,0,0,0.6); z-index: 100; padding: 0 10px;}
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 25%; color: #888; transition: 0.3s; cursor: pointer; position: relative;}
+        .nav-item.active { color: white; }
+        .nav-item svg { width: 24px; height: 24px; margin-bottom: 4px; stroke: currentColor; fill: none; transition: 0.3s;}
+        .nav-item.active svg { stroke: var(--accent); transform: translateY(-2px);}
+        .nav-item span { font-size: 0.65rem; font-weight: 600; }
+
+        /* General UI Elements */
+        .card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 24px; padding: 20px; margin-bottom: 15px; backdrop-filter: blur(25px); box-shadow: 0 10px 30px rgba(0,0,0,0.2);}
+        .user-info { display: flex; align-items: center; gap: 15px; }
+        .user-info img { width: 65px; height: 65px; border-radius: 50%; border: 2px solid var(--accent); object-fit: cover;}
+        
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; margin-top: 5px; }
+        .status-on { background: rgba(48,209,88,0.15); color: #30d158; border: 1px solid rgba(48,209,88,0.3); }
+        .status-off { background: rgba(255,69,58,0.15); color: #ff453a; border: 1px solid rgba(255,69,58,0.3); }
+
+        .btn { width: 100%; padding: 15px; border-radius: 16px; border: none; font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px;}
+        .btn-primary { background: var(--accent); color: white; box-shadow: 0 5px 20px rgba(94,92,230,0.3);}
+        .btn-secondary { background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--glass-border); }
+        .btn-hollow { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: white; }
+        .btn:active { transform: scale(0.98); }
+
+        /* Stats Grid */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
-        .stat-box { background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 15px; text-align: center; }
-        .stat-box h2 { font-size: 24px; color: var(--accent-color); margin-bottom: 5px; text-shadow: 0 0 10px var(--accent-glow); }
-        .stat-box p { font-size: 12px; color: var(--text-muted); }
-        .price-banner { text-align: center; padding: 30px 10px; } .price-banner h1 { font-size: 42px; display: flex; justify-content: center; align-items: center; gap: 10px; } .price-banner span { font-size: 16px; color: var(--text-muted); font-weight: normal; }
-        .disclaimer { text-align: center; font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-top: 20px; padding: 0 10px; }
-        .bottom-nav { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 32px); background: rgba(20, 20, 25, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 24px; display: flex; justify-content: space-around; padding: 12px 5px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .nav-item { background: none; border: none; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; cursor: pointer; transition: color 0.3s ease; width: 33%; }
-        .nav-item i { font-size: 20px; transition: transform 0.3s ease; } .nav-item.active { color: var(--text-main); } .nav-item.active i { transform: translateY(-3px); color: var(--accent-color); text-shadow: 0 0 10px var(--accent-glow); }
-        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: var(--glass-bg); backdrop-filter: blur(15px); border: 1px solid var(--glass-border); padding: 12px 24px; border-radius: 30px; color: #fff; transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); z-index: 1000; }
-        .toast.show { transform: translateX(-50%) translateY(0); }
-        .chat-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .chat-item:last-child { border-bottom: none; }
-        .chat-icon { width: 40px; height: 40px; border-radius: 50%; background: rgba(138, 43, 226, 0.3); display: flex; align-items: center; justify-content: center; margin-right: 15px; }
-        .chat-details { flex: 1; } .chat-name { font-size: 15px; font-weight: 500; } .chat-msgs { font-size: 12px; color: var(--text-muted); }
+        .stat-box { background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 16px; padding: 15px; text-align: center; }
+        .stat-val { font-size: 1.8rem; font-weight: 700; color: var(--accent); margin-bottom: 5px; }
+        .stat-label { font-size: 0.8rem; color: #888; }
+
+        /* Toggles */
+        .settings-container { position: relative; }
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .toggle-row:last-child { border-bottom: none; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; flex-shrink: 0;}
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); transition: .4s; border-radius: 28px; }
+        .slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        /* Locked Island (For Unsubscribed Settings) */
+        .settings-disabled { pointer-events: none; opacity: 0.5; filter: grayscale(100%); }
+        .glass-island-lock { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); width: 90%; background: rgba(25, 25, 30, 0.85); backdrop-filter: blur(20px); border: 1px solid var(--accent); border-radius: 20px; padding: 15px; text-align: center; font-weight: 600; color: white; display: none; cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 10;}
+        
+        /* Instructions UI */
+        .instruction-step { margin: 15px 0; font-size: 0.95rem; line-height: 1.5; color: #eee; }
+        .instruction-step span { color: #fff; font-weight: bold; }
+        .instruction-step:before { content: "▷"; color: var(--accent); margin-right: 8px; font-size: 0.8rem; }
+        .premium-warning { background: rgba(255, 215, 0, 0.1); border-left: 3px solid #FFD700; padding: 15px; border-radius: 8px; margin: 15px 0; display: flex; align-items: center; gap: 15px; font-weight: bold; font-size: 0.9rem; color: #fff; }
+
+        /* Subscription Active UI */
+        .sub-active-card { background: rgba(94, 92, 230, 0.1); border: 1px solid rgba(94, 92, 230, 0.3); text-align: center; }
+        .progress-bg { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin: 20px 0 10px 0; overflow: hidden;}
+        .progress-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 1s ease;}
+        
+        /* Star SVG Data */
+        .star-svg { width: 20px; height: 20px; }
     </style>
 </head>
 <body>
-
-<div class="toast" id="toast">Скопировано!</div>
-
-<div class="app-container">
-    <div id="view-settings" class="view active">
-        <div class="header">
-            <i class="fa-solid fa-sparkles logo-icon"></i>
-            <h2>White Loss</h2>
-        </div>
-
-        <div class="glass-panel profile-info">
-            <div class="avatar" id="userAvatar">U</div>
-            <div class="user-details">
-                <h3 id="userName">Пользователь</h3>
-                <p id="userId">ID: Загрузка...</p>
-            </div>
-            <button class="copy-btn" onclick="copyId()"><i class="fa-regular fa-copy"></i></button>
-        </div>
-
-        <div class="glass-panel">
-            <div class="status-indicator">
-                <div class="dot" id="statusDot"></div>
-                <span id="statusText">Подключение...</span>
-            </div>
-        </div>
-
-        <div class="actions">
-            <button class="glass-button" onclick="showAlert('Открываю инструкцию...')"><i class="fa-solid fa-book" style="color: #4facfe;"></i> Инструкция по подключению</button>
-            <button class="glass-button" onclick="showAlert('Открываю возможности...')"><i class="fa-solid fa-bolt" style="color: #f6d365;"></i> Возможности</button>
-            <button class="glass-button" onclick="showAlert('Связь с поддержкой...')"><i class="fa-solid fa-wrench" style="color: #a18cd1;"></i> Тех.поддержка</button>
-        </div>
-
-        <div class="glass-panel" style="margin-top: 16px;">
-            <h3 style="font-size: 16px; margin-bottom: 10px; color: #a18cd1;">Ваша статистика</h3>
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <h2 id="statIntercepted">0</h2>
-                    <p>Перехвачено</p>
-                </div>
-                <div class="stat-box">
-                    <h2 id="statRecovered">0</h2>
-                    <p>Восстановлено</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="view-chats" class="view">
-        <div class="header">
-            <i class="fa-solid fa-comments logo-icon"></i>
-            <h2>Мои чаты</h2>
-        </div>
-        <div class="glass-panel" id="chatsListContainer">
-            <div style="text-align: center; padding: 40px 20px;" id="emptyChats">
-                <i class="fa-solid fa-ghost" style="font-size: 40px; color: var(--text-muted); margin-bottom: 15px;"></i>
-                <p style="color: var(--text-muted);">Загрузка чатов...</p>
-            </div>
-        </div>
-    </div>
-
-    <div id="view-plus" class="view">
-        <div class="header">
-            <i class="fa-solid fa-star logo-icon" style="color: #f6d365;"></i>
-            <h2>White Loss <span style="color: #a18cd1;">Plus</span></h2>
-        </div>
-        <div class="glass-panel price-banner">
-            <h1><i class="fa-solid fa-star" style="color: #f6d365; font-size: 30px;"></i> 50 <span>/месяц</span></h1>
-        </div>
-        <button class="glass-button primary" onclick="tg.openInvoice('ЗДЕСЬ_ССЫЛКА_НА_ОПЛАТУ_STARS')">Подключить подписку за ★</button>
-        <button class="glass-button" onclick="showAlert('Переход к оплате в крипте/фиате...')">Подключить за Рубли/USDT</button>
-        <p class="disclaimer">Оплата автоматически доступна за Telegram Звезды (Stars). <br><br> Если вы хотите совершить платеж в другой валюте, пожалуйста, обратитесь к модератору.</p>
-    </div>
-
-    <nav class="bottom-nav">
-        <button class="nav-item active" data-target="view-settings"><i class="fa-solid fa-gear"></i><span>Настройки</span></button>
-        <button class="nav-item" data-target="view-chats"><i class="fa-solid fa-comment-dots"></i><span>Чаты</span></button>
-        <button class="nav-item" data-target="view-plus"><i class="fa-solid fa-star"></i><span>Plus</span></button>
-    </nav>
-</div>
-
-<script>
-    // ВАЖНО: Замени на адрес своего сервера, где крутится admin.py
-    const API_BASE_URL = "http://127.0.0.1:5000/"; 
-
-    const tg = window.Telegram.WebApp;
-    tg.expand(); 
-    tg.ready();
-
-    let currentUserId = null;
-
-    // Инициализация UI пользователя
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        const user = tg.initDataUnsafe.user;
-        currentUserId = user.id;
-        document.getElementById('userName').innerText = user.first_name || user.username;
-        document.getElementById('userId').innerText = `ID: ${user.id}`;
-        document.getElementById('userAvatar').innerText = (user.first_name || user.username).charAt(0).toUpperCase();
+    <div id="onboarding">
+        <h2 style="margin-bottom: 10px; text-align:center; font-size:1.8rem;">Select Language</h2>
+        <p style="color:#888; margin-bottom: 25px; text-align:center; font-size:0.95rem;">Price will be fixed based on your region.</p>
         
-        // Загружаем данные с бэкенда
-        fetchUserData(user.id);
-    } else {
-        document.getElementById('userId').innerText = "Запустите из Telegram";
-    }
+        <input type="search" class="search-lang" id="lang-search-input" placeholder="Search language..." onkeyup="filterLanguages()">
+        
+        <ul class="lang-list" id="lang-list">
+            </ul>
+    </div>
 
-    // Запрос к API admin.py
-    async function fetchUserData(userId) {
-        try {
-            // Запрос статистики
-            const statsRes = await fetch(`${API_BASE_URL}/api/webapp/stats?user_id=${userId}`);
-            const stats = await statsRes.json();
+    <div class="content" style="display:none;" id="main-app">
+        
+        <div id="tab-profile" class="tab-content active">
+            <h2 style="margin-bottom: 15px;" data-i18n="tab_profile">Profile</h2>
             
-            document.getElementById('statIntercepted').innerText = stats.total || 0;
-            document.getElementById('statRecovered').innerText = stats.recovered || 0;
-
-            // Обновляем статус подключения
-            const dot = document.getElementById('statusDot');
-            const statusTxt = document.getElementById('statusText');
-            if (stats.connected) {
-                dot.classList.add('connected');
-                statusTxt.innerText = "Подключен (Business)";
-                statusTxt.style.color = "var(--success)";
-            } else {
-                statusTxt.innerText = "Не подключен";
-            }
-
-            // Запрос списка чатов
-            const chatsRes = await fetch(`${API_BASE_URL}/api/webapp/chats?user_id=${userId}`);
-            const chatsData = await chatsRes.json();
-            renderChats(chatsData.chats);
-
-        } catch (error) {
-            console.error("Ошибка загрузки данных:", error);
-            showToast("Ошибка связи с сервером");
-        }
-    }
-
-    function renderChats(chats) {
-        const container = document.getElementById('chatsListContainer');
-        if (!chats || chats.length === 0) {
-            container.innerHTML = `<div style="text-align: center; padding: 40px 20px;"><i class="fa-solid fa-ghost" style="font-size: 40px; color: var(--text-muted); margin-bottom: 15px;"></i><p style="color: var(--text-muted);">Вы еще не подключили бота ни к одному чату.</p></div>`;
-            return;
-        }
-
-        let html = '';
-        chats.forEach(chat => {
-            html += `
-                <div class="chat-item">
-                    <div class="chat-icon"><i class="fa-solid fa-user-group"></i></div>
-                    <div class="chat-details">
-                        <div class="chat-name">${chat.name}</div>
-                        <div class="chat-msgs">Сообщений: ${chat.msg_count}</div>
+            <div class="card user-info">
+                <img id="u-avatar" src="">
+                <div>
+                    <h3 id="u-name">User</h3>
+                    <div style="font-size: 0.8rem; color:#888;">ID: <span id="u-id">...</span></div>
+                    <div id="u-status" class="status-badge status-off">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span data-i18n="not_connected">Not connected</span>
                     </div>
                 </div>
-            `;
-        });
-        container.innerHTML = html;
-    }
+            </div>
 
-    // Навигация
-    const navItems = document.querySelectorAll('.nav-item');
-    const views = document.querySelectorAll('.view');
-    navItems.forEach(item => {
-        item.addEventListener('click', () => {
-            navItems.forEach(nav => nav.classList.remove('active'));
-            item.classList.add('active');
-            views.forEach(view => view.classList.remove('active'));
-            document.getElementById(item.getAttribute('data-target')).classList.add('active');
-        });
-    });
+            <div style="display:flex; gap:10px; margin-bottom: 15px;">
+                <button class="btn btn-secondary" onclick="tg.showAlert('Функции в разработке')">⚡ <span data-i18n="btn_features">Features</span></button>
+                <button class="btn btn-secondary" onclick="tg.showAlert('Пишите @admin')">🛠 <span data-i18n="btn_support">Support</span></button>
+            </div>
+            
+            <h3 style="margin: 25px 0 15px 5px; font-size: 1.1rem; color:#ccc;" data-i18n="stats_title">Stats</h3>
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-box">
+                    <div class="stat-val" id="stat-chats-val">0</div>
+                    <div class="stat-label" data-i18n="stat_chats">Chats</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-val" id="stat-msgs-val">0</div>
+                    <div class="stat-label" data-i18n="stat_msgs">Messages</div>
+                </div>
+            </div>
 
-    function showToast(message) {
-        const toast = document.getElementById('toast');
-        toast.innerText = message;
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 2000);
-    }
+            <div class="card">
+                <h3 style="margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;" data-i18n="instruction_title">Connection Instructions</h3>
+                <div class="instruction-step" data-i18n="step_1">Open Telegram settings</div>
+                <div class="instruction-step" data-i18n="step_2">Go to <span>Telegram Business</span></div>
+                <div class="instruction-step" data-i18n="step_3">Select <span>Chatbots</span> and enter <span>Quasar_bot</span></div>
+                <div class="instruction-step" data-i18n="step_4">Click <span>Add</span></div>
 
-    function showAlert(msg) { tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.showAlert(msg) : showToast(msg); }
-    function copyId() {
-        const idText = document.getElementById('userId').innerText.replace('ID: ', '');
-        navigator.clipboard.writeText(idText).then(() => showToast('ID скопирован!')).catch(e => console.error(e));
-    }
-</script>
+                <div class="premium-warning">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#FFD700"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    <span data-i18n="warn_1">Allow all permissions</span>
+                </div>
+                <div class="premium-warning">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#FFD700"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    <span data-i18n="warn_2">Telegram Premium required</span>
+                </div>
+                
+                <button class="btn btn-secondary" onclick="tg.showAlert('Скриншоты загружаются')" style="margin-top:15px; justify-content: flex-start; padding-left: 20px;">
+                    📘 Показать скриншоты
+                </button>
+            </div>
+        </div>
+
+        <div id="tab-settings" class="tab-content">
+            <h2 style="margin-bottom: 15px;" data-i18n="tab_settings">Settings</h2>
+            <div class="settings-container">
+                <div class="card" id="settings-card">
+                    <div class="toggle-row">
+                        <div>
+                            <div style="font-weight:600;" data-i18n="set_once">One-time Media</div>
+                            <div style="font-size:0.75rem; color:#888;" data-i18n="set_once_sub">Photos & Videos (on reply)</div>
+                        </div>
+                        <label class="switch"><input type="checkbox" id="set-once" onchange="updateSet('intercept_once', this)"><span class="slider"></span></label>
+                    </div>
+                    <div class="toggle-row">
+                        <div><div style="font-weight:600;" data-i18n="set_del">Deleted Messages</div></div>
+                        <label class="switch"><input type="checkbox" id="set-del" onchange="updateSet('intercept_deleted', this)"><span class="slider"></span></label>
+                    </div>
+                    <div class="toggle-row">
+                        <div><div style="font-weight:600;" data-i18n="set_edit">Edit History</div></div>
+                        <label class="switch"><input type="checkbox" id="set-edit" onchange="updateSet('intercept_edited', this)"><span class="slider"></span></label>
+                    </div>
+                    <div class="toggle-row">
+                        <div><div style="font-weight:600;" data-i18n="set_broadcast">Broadcast to Bot</div></div>
+                        <label class="switch"><input type="checkbox" id="set-broadcast" onchange="updateSet('retransmit', this)"><span class="slider"></span></label>
+                    </div>
+                </div>
+                <div class="glass-island-lock" id="settings-lock" onclick="navTo('sub')">
+                    <svg class="star-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right:5px; margin-top:-3px;"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="url(#starGradient)" stroke="#FFD700" stroke-width="1.5" stroke-linejoin="round"/><defs><linearGradient id="starGradient" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#FFD700"/><stop offset="1" stop-color="#FF8C00"/></linearGradient></defs></svg>
+                    <span data-i18n="sub_required">Available only with Neo</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-chats" class="tab-content">
+            <h2 style="margin-bottom: 15px;" data-i18n="tab_chats">Chats</h2>
+            <div class="card" id="chats-card">
+                <p style="color:#aaa; font-size:0.9rem; text-align:center; padding:20px 0;" data-i18n="chats_desc">
+                    History is available in Neo version.
+                </p>
+                <button class="btn btn-secondary" onclick="handleAddChat()" style="background:rgba(255,255,255,0.1);">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <span data-i18n="btn_add_chat">Add Chat</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="tab-sub" class="tab-content">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom: 5px;">
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="url(#starGradientLg)" stroke="#FFD700" stroke-width="1.5" stroke-linejoin="round"/>
+                    <defs><linearGradient id="starGradientLg" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#FFD700"/><stop offset="1" stop-color="#FF8C00"/></linearGradient></defs>
+                </svg>
+                <h2>Quasar <span style="color: #a5a4fa;">Neo</span></h2>
+            </div>
+
+            <div id="sub-active-ui" style="display:none;">
+                <h3 style="text-align:center; color: #a5a4fa; margin-bottom: 20px;" data-i18n="sub_active">Ваша подписка активна</h3>
+                <div class="card sub-active-card">
+                    <div class="progress-bg"><div class="progress-fill" id="sub-progress"></div></div>
+                    <div style="font-size:0.9rem; color:#ccc; margin-bottom:15px;"><span data-i18n="sub_left">Осталось</span> <span id="sub-days-left" style="color:white; font-weight:bold;">0</span> дней</div>
+                    <div style="font-size:0.95rem; font-weight:600; padding-top:15px; border-top:1px solid rgba(255,255,255,0.1);"><span data-i18n="sub_until">До</span> <span id="sub-date">...</span></div>
+                </div>
+            </div>
+
+            <div id="sub-inactive-ui" style="display:none;">
+                <div class="card" style="text-align:center; padding: 30px 20px;">
+                    <h3 style="margin-bottom:10px;" data-i18n="sub_buy_title">Полный доступ</h3>
+                    <p style="color:#aaa; font-size:0.9rem; margin-bottom:20px;" data-i18n="sub_price_text">Зафиксированная цена для вашего региона:</p>
+                    <div style="font-size: 2.2rem; font-weight:bold; color:var(--accent); margin-bottom:25px; display:flex; justify-content:center; align-items:center; gap:8px;">
+                        <span id="price-val">...</span> 
+                        <svg class="star-svg" width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="url(#starGradient2)"/><defs><linearGradient id="starGradient2" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#FFD700"/><stop offset="1" stop-color="#FF8C00"/></linearGradient></defs></svg>
+                    </div>
+                    <button class="btn btn-primary" onclick="tg.showAlert('Оплата через Telegram Stars в разработке')">
+                        <svg class="star-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="url(#starGradient3)"/><defs><linearGradient id="starGradient3" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#FFD700"/><stop offset="1" stop-color="#FF8C00"/></linearGradient></defs></svg>
+                        <span data-i18n="btn_buy">Оплатить подписку</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="bottom-nav" id="bottom-nav" style="display:none;">
+        <div class="nav-item active" onclick="navTo('profile')">
+            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span data-i18n="tab_profile">Profile</span>
+        </div>
+        <div class="nav-item" onclick="navTo('settings')">
+            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span data-i18n="tab_settings">Settings</span>
+        </div>
+        <div class="nav-item" onclick="navTo('chats')">
+            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span data-i18n="tab_chats">Chats</span>
+        </div>
+        <div class="nav-item" onclick="navTo('sub')">
+            <svg class="star-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="url(#starGradient4)"/><defs><linearGradient id="starGradient4" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#888888"/><stop offset="1" stop-color="#aaaaaa"/></linearGradient></defs></svg>
+            <span data-i18n="tab_sub" style="color:var(--accent);">Neo</span>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+
+        // 🟢 ТВОЙ NGROK АДРЕС (ИЛИ ДОМЕН СЕРВЕРА)
+        const API_URL = "https://chere-unwrathful-malapertly.ngrok-free.dev/api/app"; 
+        // Если грузишь на сервер, поменяй домен соответственно.
+        
+        const initData = tg.initData; 
+        const user = tg.initDataUnsafe.user;
+        let profileData = {};
+        let currentDict = {};
+
+        // Список языков для Onboarding
+        const langDb = [
+            {code: "English", name: "English"}, {code: "Русский", name: "Russian"},
+            {code: "Українська", name: "Ukrainian"}, {code: "हिन्दी", name: "Hindi"},
+            {code: "فارسی", name: "Persian"}, {code: "Español", name: "Spanish"},
+            {code: "Bahasa Indonesia", name: "Indonesian"}, {code: "العربية", name: "Arabic"},
+            {code: "Português", name: "Portuguese"}, {code: "Oʻzbekcha", name: "Uzbek"}
+        ];
+
+        if(user) {
+            document.getElementById('u-name').innerText = user.first_name;
+            document.getElementById('u-id').innerText = user.id;
+        }
+
+        async function fetchAPI(endpoint, payload = null, method = 'POST') {
+            const options = {
+                method: method,
+                headers: { 'Content-Type': 'application/json', 'X-Tg-Init-Data': initData }
+            };
+            if (payload) options.body = JSON.stringify(payload);
+            return await fetch(API_URL + endpoint, options).then(r => r.json());
+        }
+
+        // Рендер языков в поиске
+        function renderLangList(filter = "") {
+            const list = document.getElementById('lang-list');
+            list.innerHTML = "";
+            langDb.filter(l => l.code.toLowerCase().includes(filter.toLowerCase()) || l.name.toLowerCase().includes(filter.toLowerCase()))
+                  .forEach(l => {
+                list.innerHTML += `<li class="lang-item" onclick="setLang('${l.code}')">
+                    <span>${l.code}</span> <span class="lang-name-en">${l.name}</span>
+                </li>`;
+            });
+        }
+        function filterLanguages() { renderLangList(document.getElementById('lang-search-input').value); }
+
+        // Загрузка словаря и обновление UI
+        async function loadTranslation(langCode) {
+            currentDict = await fetchAPI(`/locales/${langCode}`, null, 'GET');
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (currentDict[key]) el.innerHTML = currentDict[key];
+            });
+        }
+
+        async function initApp() {
+            if(!user) return;
+            profileData = await fetchAPI('/profile');
+            
+            if(!profileData.language) {
+                document.getElementById('onboarding').style.display = 'flex';
+                renderLangList();
+            } else {
+                document.getElementById('onboarding').style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+                document.getElementById('bottom-nav').style.display = 'flex';
+                
+                // Загружаем язык юзера
+                await loadTranslation(profileData.language);
+
+                // Аватар тянем через наше API (оно кэширует с TG серверов)
+                document.getElementById('u-avatar').src = `${API_URL.replace('/api/app', '')}/avatar/${user.id}/${user.first_name}`;
+                
+                // Статистика
+                document.getElementById('stat-chats-val').innerText = profileData.stats.chats;
+                document.getElementById('stat-msgs-val').innerText = profileData.stats.messages;
+                
+                if(profileData.is_connected) {
+                    const st = document.getElementById('u-status');
+                    st.className = 'status-badge status-on';
+                    st.innerHTML = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> <span>${currentDict.connected}</span>`;
+                }
+
+                // Логика подписки
+                if(profileData.sub_status === 0) {
+                    // Блокируем настройки (островок поверх)
+                    document.getElementById('settings-card').classList.add('settings-disabled');
+                    document.getElementById('settings-lock').style.display = 'block';
+                    
+                    // Показываем UI покупки
+                    document.getElementById('sub-active-ui').style.display = 'none';
+                    document.getElementById('sub-inactive-ui').style.display = 'block';
+                    document.getElementById('price-val').innerText = profileData.price;
+                } else {
+                    document.getElementById('settings-card').classList.remove('settings-disabled');
+                    document.getElementById('settings-lock').style.display = 'none';
+                    
+                    document.getElementById('set-once').checked = profileData.settings.intercept_once;
+                    document.getElementById('set-del').checked = profileData.settings.intercept_deleted;
+                    document.getElementById('set-edit').checked = profileData.settings.intercept_edited;
+                    document.getElementById('set-broadcast').checked = profileData.settings.retransmit;
+
+                    // UI активной подписки
+                    document.getElementById('sub-active-ui').style.display = 'block';
+                    document.getElementById('sub-inactive-ui').style.display = 'none';
+                    
+                    // Высчитываем дни для прогресс-бара
+                    const end = new Date(profileData.sub_end + " UTC");
+                    const now = new Date();
+                    const diffDays = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+                    document.getElementById('sub-days-left').innerText = diffDays > 0 ? diffDays : 0;
+                    document.getElementById('sub-date').innerText = end.toLocaleDateString();
+                    
+                    // Условный прогресс бар (допустим 30 дней максимум для визуала)
+                    const percent = Math.min(100, Math.max(0, (diffDays / 30) * 100));
+                    document.getElementById('sub-progress').style.width = percent + '%';
+                }
+            }
+        }
+
+        async function setLang(lang) {
+            await fetchAPI('/set_language', {language: lang});
+            document.getElementById('onboarding').style.opacity = '0';
+            setTimeout(() => { initApp(); }, 300);
+        }
+
+        function navTo(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        function handleAddChat() {
+            if(profileData.sub_status === 1) {
+                tg.showAlert('Функция выбора чата для отслеживания открыта!');
+            } else {
+                navTo('sub');
+            }
+        }
+
+        function updateSet(name, el) {
+            fetchAPI('/update_settings', {setting: name, value: el.checked ? 1 : 0});
+        }
+
+        initApp();
+    </script>
 </body>
 </html>
